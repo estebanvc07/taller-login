@@ -1,0 +1,293 @@
+ // MAIN
+
+package com.taller.mvc; 
+ 
+import com.taller.mvc.vista.LoginVista; 
+ 
+public class Main { 
+    public static void main(String[] args) { 
+        new LoginVista().setVisible(true); 
+    } 
+} 
+
+
+// CONEXION BD
+
+
+package com.taller.mvc.conexion; 
+
+import java.sql.Connection; 
+import java.sql.DriverManager; 
+import java.sql.SQLException; 
+
+public class ConexionBD { 
+private static final String URL = "jdbc:mysql://localhost:3308/taller"; 
+private static final String USER = "root"; 
+private static final String PASSWORD = ""; 
+public static Connection conectar() throws SQLException { 
+return DriverManager.getConnection(URL, USER, PASSWORD); 
+
+} 
+} 
+
+// USUARIO CONTROLADOR
+
+package com.taller.mvc.controlador; 
+ 
+import com.taller.mvc.modelo.Usuario; 
+import com.taller.mvc.conexion.ConexionBD; 
+import java.sql.*; 
+ 
+public class UsuarioControlador { 
+ 
+    public boolean login(String usuario, String contraseña) { 
+        String query = "SELECT * FROM usuarios WHERE usuario = ? AND contraseña = ?"; 
+        try (Connection conn = ConexionBD.conectar(); 
+             PreparedStatement stmt = conn.prepareStatement(query)) { 
+            stmt.setString(1, usuario); 
+            stmt.setString(2, contraseña); 
+            ResultSet rs = stmt.executeQuery(); 
+            return rs.next(); 
+        } catch (SQLException e) { 
+            System.out.println("Error al intentar iniciar sesión: " + e.getMessage()); 
+            return false; 
+        } 
+    
+    }
+    public boolean registrar(Usuario usuarioNuevo) {
+    String query = "INSERT INTO usuarios (usuario, contraseña, nombre, telefono, direccion) VALUES (?, ?, ?, ?, ?)";
+    try (Connection conn = ConexionBD.conectar();
+         PreparedStatement stmt = conn.prepareStatement(query)) {
+        stmt.setString(1, usuarioNuevo.getUsuario());
+        stmt.setString(2, usuarioNuevo.getContraseña());
+        stmt.setString(3, usuarioNuevo.getNombre());
+        stmt.setString(4, usuarioNuevo.getTelefono());
+        stmt.setString(5, usuarioNuevo.getDireccion());
+        stmt.executeUpdate();
+        return true;
+    } catch (SQLException e) {
+        System.out.println("Error al intentar registrar: " + e.getMessage());
+        return false;
+    }
+   }
+}
+
+
+// USUARIO
+
+package com.taller.mvc.modelo; 
+ 
+public class Usuario { 
+    private String usuario; 
+    private String contraseña; 
+    private String nombre;
+    private String telefono;
+    private String direccion;
+ 
+    public Usuario(String usuario, String contraseña, String nombre, String telefono, String direccion) { 
+        this.usuario = usuario; 
+        this.contraseña = contraseña;
+        this.nombre = nombre;
+        this.telefono = telefono;
+        this.direccion = direccion;
+    } 
+ 
+    public String getUsuario() { 
+        return usuario; 
+    }
+      public String getContraseña() { 
+        return contraseña; 
+    } 
+      public String getNombre() {
+     return nombre;
+    }
+
+     public String getTelefono() {
+      return telefono;
+    }
+
+     public String getDireccion() {
+     return direccion;
+ }
+      
+} 
+
+// LOGIN VISTA
+
+package com.taller.mvc.vista; 
+
+import com.taller.mvc.controlador.UsuarioControlador; 
+import javax.swing.*; 
+import java.awt.event.*; 
+
+public class LoginVista extends JFrame { 
+
+ 
+    private JTextField txtUsuario; 
+    private JPasswordField txtContraseña; 
+    private JButton btnLogin; 
+    private JButton btnRegistrar; 
+ 
+    public LoginVista() { 
+        setTitle("Login - Taller VisionGlass"); 
+        setSize(300, 200); 
+        setLayout(null); 
+        setDefaultCloseOperation(EXIT_ON_CLOSE); 
+ 
+        txtUsuario = new JTextField(); 
+        txtUsuario.setBounds(100, 30, 150, 25); 
+        add(txtUsuario); 
+ 
+        txtContraseña = new JPasswordField(); 
+        txtContraseña.setBounds(100, 70, 150, 25); 
+        add(txtContraseña); 
+ 
+        btnLogin = new JButton("Login"); 
+        btnLogin.setBounds(30, 110, 100, 30); 
+        add(btnLogin); 
+ 
+        btnRegistrar = new JButton("Registrar"); 
+        btnRegistrar.setBounds(140, 110, 100, 30); 
+        add(btnRegistrar); 
+ 
+        JLabel lblUsuario = new JLabel("Usuario:"); 
+        lblUsuario.setBounds(20, 30, 80, 25); 
+        add(lblUsuario); 
+ 
+        JLabel lblContraseña = new JLabel("Contraseña:"); 
+        lblContraseña.setBounds(20, 70, 80, 25); 
+        add(lblContraseña); 
+ 
+        UsuarioControlador controlador = new UsuarioControlador(); 
+ 
+        btnLogin.addActionListener(new ActionListener() { 
+            public void actionPerformed(ActionEvent e) { 
+                String usuario = txtUsuario.getText(); 
+                String contraseña = new String(txtContraseña.getPassword()); 
+                if (controlador.login(usuario, contraseña)) { 
+                    JOptionPane.showMessageDialog(null, "¡Bienvenido!"); 
+                } else { 
+                    JOptionPane.showMessageDialog(null, "Credenciales incorrectas."); 
+
+  } 
+            } 
+        }); 
+ 
+        btnRegistrar.addActionListener(new ActionListener() { 
+            public void actionPerformed(ActionEvent e) { 
+                RegistroVista registro = new RegistroVista(); 
+                registro.setVisible(true); 
+            } 
+        }); 
+    } 
+} 
+
+// REGISTRO VISTA
+
+package com.taller.mvc.vista;
+
+import com.taller.mvc.modelo.Usuario;
+import com.taller.mvc.controlador.UsuarioControlador;
+import javax.swing.*;
+import java.awt.event.*;
+
+public class RegistroVista extends JFrame {
+    private JTextField txtUsuario;
+    private JPasswordField txtContraseña;
+    private final JButton btnGuardar;
+    private JTextField txtNombre;
+    private JTextField txtTelefono;
+    private JTextField txtDireccion;
+
+    public RegistroVista() {
+        setTitle("Registro");
+        setSize(320, 330); // Aumentado para dar espacio
+        setLayout(null);
+
+        
+        JLabel lblUsuario = new JLabel("Usuario:");
+        lblUsuario.setBounds(20, 20, 80, 25);
+        add(lblUsuario);
+
+        txtUsuario = new JTextField();
+        txtUsuario.setBounds(100, 20, 180, 25);
+        add(txtUsuario);
+
+        JLabel lblContraseña = new JLabel("Contraseña:");
+        lblContraseña.setBounds(20, 60, 80, 25);
+        add(lblContraseña);
+
+        txtContraseña = new JPasswordField();
+        txtContraseña.setBounds(100, 60, 180, 25);
+        add(txtContraseña);
+
+        JLabel lblNombre = new JLabel("Nombre:");
+        lblNombre.setBounds(20, 100, 80, 25);
+        add(lblNombre);
+
+        txtNombre = new JTextField();
+        txtNombre.setBounds(100, 100, 180, 25);
+        add(txtNombre);
+
+        JLabel lblTelefono = new JLabel("Teléfono:");
+        lblTelefono.setBounds(20, 140, 80, 25);
+        add(lblTelefono);
+
+        txtTelefono = new JTextField();
+        txtTelefono.setBounds(100, 140, 180, 25);
+        add(txtTelefono);
+
+        JLabel lblDireccion = new JLabel("Dirección:");
+        lblDireccion.setBounds(20, 180, 80, 25);
+        add(lblDireccion);
+
+        txtDireccion = new JTextField();
+        txtDireccion.setBounds(100, 180, 180, 25);
+        add(txtDireccion);
+
+        btnGuardar = new JButton("Registrar");
+        btnGuardar.setBounds(100, 230, 100, 30);
+        add(btnGuardar);
+
+        // Acción del botón
+        btnGuardar.addActionListener((ActionEvent e) -> {
+            Usuario usuario = new Usuario(
+                txtUsuario.getText(),
+                new String(txtContraseña.getPassword()),
+                txtNombre.getText(),
+                txtTelefono.getText(),
+                txtDireccion.getText()
+            );
+            UsuarioControlador controlador = new UsuarioControlador();
+            if (controlador.registrar(usuario)) {
+                JOptionPane.showMessageDialog(null, "Usuario registrado con éxito.");
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(null, "Error al registrar.");
+            }
+        });
+    }
+}
+
+
+// pom.xml
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+http://maven.apache.org/xsd/maven-4.0.0.xsd"> 
+    <modelVersion>4.0.0</modelVersion> 
+    <groupId>com.taller</groupId> 
+    <artifactId>TallerBase-Escritorio</artifactId> 
+    <version>1.0-SNAPSHOT</version> 
+ 
+    <dependencies> 
+        <dependency> 
+            <groupId>com.mysql</groupId> 
+            <artifactId>mysql-connector-j</artifactId> 
+            <version>8.0.33</version> 
+        </dependency> 
+    </dependencies> 
+</project> 
+
+
